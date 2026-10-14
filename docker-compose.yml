@@ -1,7 +1,7 @@
 name: open-email
 
 x-app: &app
-  build: ./apps/api
+  image: ghcr.io/kenviriya/open-email-api:${OPEN_EMAIL_VERSION:?set OPEN_EMAIL_VERSION in .env}
   restart: unless-stopped
   env_file: .env
   environment:
@@ -23,7 +23,7 @@ services:
       app: { condition: service_started }
 
   web:
-    build: ./apps/web
+    image: ghcr.io/kenviriya/open-email-web:${OPEN_EMAIL_VERSION:?set OPEN_EMAIL_VERSION in .env}
     restart: unless-stopped
     environment:
       API_INTERNAL_URL: http://app:8080

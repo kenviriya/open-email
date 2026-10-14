@@ -9,7 +9,7 @@ Self-hosted business email built on [Resend](https://resend.com) and Cloudflare 
 
 ## Requirements
 
-- A Linux server with [Docker Engine and the Compose plugin](https://docs.docker.com/engine/install/), plus `git` and `openssl`
+- A Linux server with [Docker Engine and the Compose plugin](https://docs.docker.com/engine/install/), plus `curl` and `openssl`
 - A [Resend](https://resend.com) account and a **Full access** API key
 - A [Cloudflare R2](https://developers.cloudflare.com/r2/) bucket
 - A domain you control, and a hostname for the app (e.g. `mail.acme.com`) reachable over public HTTPS so Resend can deliver webhooks
@@ -17,12 +17,10 @@ Self-hosted business email built on [Resend](https://resend.com) and Cloudflare 
 ## Install
 
 ```sh
-git clone https://github.com/kenviriya/open-email.git
-cd open-email
-./install.sh
+curl -fsSL https://github.com/kenviriya/open-email/releases/latest/download/install.sh | bash
 ```
 
-The installer asks two questions, writes `.env` (with a generated database password and `APP_SECRET`) and starts the stack. Re-running it keeps your existing `.env`.
+This creates `./open-email` (set `OPEN_EMAIL_DIR` to choose another folder), downloads `docker-compose.yml` and the Caddy config for the latest release, asks two questions, writes `.env` (with a generated database password and `APP_SECRET`) and starts the stack. Prefer to read the script first? Download it, review it, then run `bash install.sh`.
 
 1. **Public hostname**, e.g. `mail.acme.com`
 2. **How to provide HTTPS** (see below)
@@ -74,10 +72,11 @@ After setup, add users and shared mailboxes from the admin pages. Resend and R2 
 
 ## Configuration
 
-All settings live in `.env`, created by the installer. See [.env.example](.env.example) to write it by hand.
+All settings live in `open-email/.env`, created by the installer. Run `docker compose` commands from that folder. See [.env.example](.env.example) to write it by hand.
 
 | Variable | Purpose |
 |---|---|
+| `OPEN_EMAIL_VERSION` | Release tag of the app images, set by the installer |
 | `DOMAIN` | Public hostname of the app |
 | `PUBLIC_URL` | `https://<DOMAIN>`; used for webhooks, cookies and origin checks |
 | `COMPOSE_PROFILES` | `caddy`, `tunnel`, or empty for your own proxy |
@@ -100,12 +99,13 @@ docker compose up -d              # start
 
 ### Updating
 
-Back up first, then:
+Back up first, then re-run the installer from the folder that contains `open-email/`. It keeps your `.env` and moves you to the latest release:
 
 ```sh
-git pull
-docker compose up -d --build
+curl -fsSL https://github.com/kenviriya/open-email/releases/latest/download/install.sh | bash
 ```
+
+To install a specific release, use `https://github.com/kenviriya/open-email/releases/download/vX.Y.Z/install.sh`.
 
 ### Backups
 
@@ -142,10 +142,6 @@ docker compose up -d
 
 ## Development
 
-```sh
-docker compose -f docker-compose.dev.yml up -d   # Postgres, Redis, MinIO
-cd apps/api && go test ./... && go run ./cmd/openemail api
-cd apps/web && pnpm install && pnpm dev
-```
+The application source is not in this repository. This repository holds the installer, the Docker Compose stack and the API contract. For local dependencies: `docker compose -f docker-compose.dev.yml up -d` (Postgres, Redis, MinIO).
 
 API contract: [docs/API.md](docs/API.md).
